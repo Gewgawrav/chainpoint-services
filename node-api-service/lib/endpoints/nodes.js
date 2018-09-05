@@ -166,19 +166,21 @@ async function postNodeV1Async (req, res, next) {
 
     return `${parsedURI.protocol}//${parsedURI.hostname}`
   })()
+
   // if an public_uri is provided, it must be valid
   if (lowerCasedPublicUri && !_.isEmpty(lowerCasedPublicUri)) {
-    if (!validUrl.isHttpUri(lowerCasedPublicUri)) {
+    let parsedPublicUri = url.parse(lowerCasedPublicUri)
+    let parsedHostname = parsedPublicUri.hostname
+    if (!validUrl.isHttpUri(lowerCasedPublicUri) && !validUrl.isHttpsUri(lowerCasedPublicUri)) {
       return next(new restify.InvalidArgumentError('invalid JSON body, invalid public_uri'))
     }
 
-    let parsedPublicUri = url.parse(lowerCasedPublicUri)
     // ensure that hostname is an IP
-    if (!utils.isIP(parsedPublicUri.hostname)) return next(new restify.InvalidArgumentError('public_uri hostname must be an IP'))
+    if (!utils.isIP(parsedHostname)) return next(new restify.InvalidArgumentError('public_uri hostname must be an IP'))
     // ensure that it is not a private IP
-    if (ip.isPrivate(parsedPublicUri.hostname)) return next(new restify.InvalidArgumentError('public_uri hostname must not be a private IP'))
+    if (ip.isPrivate(parsedHostname)) return next(new restify.InvalidArgumentError('public_uri hostname must not be a private IP'))
     // disallow 0.0.0.0
-    if (parsedPublicUri.hostname === '0.0.0.0') return next(new restify.InvalidArgumentError('0.0.0.0 not allowed in public_uri'))
+    if (parsedHostname === '0.0.0.0') return next(new restify.InvalidArgumentError('0.0.0.0 not allowed in public_uri'))
     // disallow any port that is not 80
     if (req.params.public_uri && url.parse(req.params.public_uri).port && url.parse(req.params.public_uri).port !== '80') return next(new restify.InvalidArgumentError('public_uri hostname must specify port 80 or omit the port number to have it be implicitly set to 80'))
   }
@@ -186,7 +188,11 @@ async function postNodeV1Async (req, res, next) {
   try {
     let whereClause
     if (lowerCasedPublicUri && !_.isEmpty(lowerCasedPublicUri)) {
-      whereClause = { [Op.or]: [{ tntAddr: lowerCasedTntAddrParam }, { publicUri: lowerCasedPublicUri }] }
+      let parsedPublicUri = url.parse(lowerCasedPublicUri)
+      let parsedHostname = parsedPublicUri.hostname
+      let lowerCasedPublicUriHttp = `http://${parsedHostname}`
+      let lowerCasedPublicUriHttps = `https://${parsedHostname}`
+      whereClause = { [Op.and]: [{ tntAddr: lowerCasedTntAddrParam }, { publicUri: lowerCasedPublicUriHttp }, { publicUri: lowerCasedPublicUriHttps }] }
     } else {
       whereClause = { tntAddr: lowerCasedTntAddrParam }
     }
@@ -301,18 +307,21 @@ async function putNodeV1Async (req, res, next) {
 
     return `${parsedURI.protocol}//${parsedURI.hostname}`
   })()
+
   // if an public_uri is provided, it must be valid
   if (lowerCasedPublicUri && !_.isEmpty(lowerCasedPublicUri)) {
-    if (!validUrl.isHttpUri(lowerCasedPublicUri)) {
+    let parsedPublicUri = url.parse(lowerCasedPublicUri)
+    let parsedHostname = parsedPublicUri.hostname
+    if (!validUrl.isHttpUri(lowerCasedPublicUri) && !validUrl.isHttpsUri(lowerCasedPublicUri)) {
       return next(new restify.InvalidArgumentError('invalid JSON body, invalid public_uri'))
     }
-    let parsedPublicUri = url.parse(lowerCasedPublicUri)
+
     // ensure that hostname is an IP
-    if (!utils.isIP(parsedPublicUri.hostname)) return next(new restify.InvalidArgumentError('public_uri hostname must be an IP'))
+    if (!utils.isIP(parsedHostname)) return next(new restify.InvalidArgumentError('public_uri hostname must be an IP'))
     // ensure that it is not a private IP
-    if (ip.isPrivate(parsedPublicUri.hostname)) return next(new restify.InvalidArgumentError('public_uri hostname must not be a private IP'))
+    if (ip.isPrivate(parsedHostname)) return next(new restify.InvalidArgumentError('public_uri hostname must not be a private IP'))
     // disallow 0.0.0.0
-    if (parsedPublicUri.hostname === '0.0.0.0') return next(new restify.InvalidArgumentError('0.0.0.0 not allowed in public_uri'))
+    if (parsedHostname === '0.0.0.0') return next(new restify.InvalidArgumentError('0.0.0.0 not allowed in public_uri'))
     // disallow any port that is not 80
     if (req.params.public_uri && url.parse(req.params.public_uri).port && url.parse(req.params.public_uri).port !== '80') return next(new restify.InvalidArgumentError('public_uri hostname must specify port 80 or omit the port number to have it be implicitly set to 80'))
   }
@@ -321,7 +330,11 @@ async function putNodeV1Async (req, res, next) {
   try {
     let whereClause
     if (lowerCasedPublicUri && !_.isEmpty(lowerCasedPublicUri)) {
-      whereClause = { [Op.or]: [{ tntAddr: lowerCasedTntAddrParam }, { publicUri: lowerCasedPublicUri }] }
+      let parsedPublicUri = url.parse(lowerCasedPublicUri)
+      let parsedHostname = parsedPublicUri.hostname
+      let lowerCasedPublicUriHttp = `http://${parsedHostname}`
+      let lowerCasedPublicUriHttps = `https://${parsedHostname}`
+      whereClause = { [Op.or]: [{ tntAddr: lowerCasedTntAddrParam }, { publicUri: lowerCasedPublicUriHttp }, { publicUri: lowerCasedPublicUriHttps }] }
     } else {
       whereClause = { tntAddr: lowerCasedTntAddrParam }
     }
