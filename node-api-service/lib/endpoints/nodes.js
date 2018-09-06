@@ -192,13 +192,13 @@ async function postNodeV1Async (req, res, next) {
       let parsedHostname = parsedPublicUri.hostname
       let lowerCasedPublicUriHttp = `http://${parsedHostname}`
       let lowerCasedPublicUriHttps = `https://${parsedHostname}`
-      whereClause = { [Op.and]: [{ tntAddr: lowerCasedTntAddrParam }, { publicUri: lowerCasedPublicUriHttp }, { publicUri: lowerCasedPublicUriHttps }] }
+      whereClause = { [Op.or]: [{ tntAddr: lowerCasedTntAddrParam }, { publicUri: lowerCasedPublicUriHttp }, { publicUri: lowerCasedPublicUriHttps }] }
     } else {
       whereClause = { tntAddr: lowerCasedTntAddrParam }
     }
     let result = await RegisteredNode.findOne({ where: whereClause, raw: true, attributes: ['tntAddr', 'publicUri'] })
     if (result) {
-      // a result was found, so some element of vaidation failed. Identify and return.
+      // a result was found, so some element of validation failed. Identify and return.
       if (lowerCasedTntAddrParam === result.tntAddr) {
         // the tnt address is already registered
         return next(new restify.ConflictError('the Ethereum address provided is already registered'))
